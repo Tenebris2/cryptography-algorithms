@@ -1,34 +1,13 @@
 import hashlib
 import random
+from curves import SECP521r1
 
-# Tham số của đường cong secp256r1
-p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
-a = 0
-b = 7
-G = (
-    55066263022277343669578718895168534326250603453777594175500187360389116729240,
-    32670510020758816978083085130507043184471273380659243275938904335757337482424,
-)
-n = 115792089237316195423570985008687907852837564279074904382605163141518161494337
+
+p, a, b, G, n = SECP521r1()
 
 
 def mod_inverse(k, p):
     return pow(k, p - 2, p)
-
-
-# def mod_inverse(k, p):
-#     """Tính toán nghịch đảo modulo bằng cách sử dụng thuật toán Euclid mở rộng"""
-#     if k <= 0 or k >= p:
-#         raise ValueError("k must be in the range (0, p)")
-#
-#     r0, r1 = p, k
-#     s0, s1 = 1, 0
-#     while r1 > 0:
-#         q = r0 // r1
-#         r0, r1 = r1, r0 - q * r1
-#         s0, s1 = s1, s0 - q * s1
-#
-#     return s0 % p
 
 
 def point_add(p1, p2):
