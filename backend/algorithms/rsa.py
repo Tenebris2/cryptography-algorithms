@@ -1,4 +1,4 @@
-from algorithms.helper import int_encrypt, generate_n_bit_prime
+from helper import int_encrypt, generate_n_bit_prime
 import gmpy2
 import concurrent.futures
 import math
