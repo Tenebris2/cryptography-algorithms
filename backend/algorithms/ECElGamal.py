@@ -100,12 +100,20 @@ def main():
     private_key = random.randint(1, n - 1)
     public_key = scalar_mult(private_key, G)
 
-    plain_point = (1234567890, 987654321)
+    plain_point = (123, 456)
 
+    print("p: ", p)
+    print("a: ", a)
+    print("b: ", b)
+    print("G: ", G)
+    print("n: ", n)
     ciphertext = encrypt(plain_point, public_key)
+    print("Public key:", public_key)
     print("Ciphertext:", ciphertext)
 
     decrypted_point = decrypt(ciphertext, private_key)
+
+    print("Private key:", private_key)
     print("Decrypted point:", decrypted_point)
 
 

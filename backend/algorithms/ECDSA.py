@@ -89,26 +89,32 @@ def ecdsa_verify(public_key, message, signature):
     if P == (0, 0):
         return False  # Kiểm tra điểm vô cùng
     R = P[0] % n
-    print("R: ", R, "   r: ", r)
+    print("R: ", R.bit_length(), "   r: ", r.bit_length())
     return R == r
 
+    #
+    # a = 0
+    # b = 7
+    # p = 43
 
-#
-# a = 0
-# b = 7
-# p = 43
+
+print("p: ", p.bit_length())
+print("a: ", a.bit_length())
+print("b: ", b.bit_length())
+print(f"G:  ({G[0].bit_length()}, {G[1].bit_length()})")
+print("n: ", n.bit_length())
 
 
 private_key = random.randint(1, n - 1)
 public_key = point_multiply(private_key, G)
 
-message = "Hello, Luong!"
+message = "Hello, Duc Anh!"
 signature = ecdsa_sign(private_key, message)
 
-print("Private Key:", private_key)
-print("Public Key:", public_key)
+print("Private Key:", private_key.bit_length())
+print(f"Public Key: ({public_key[0].bit_length()}, {public_key[1].bit_length()})")
 print("Message:", message)
-print("Signature:", signature)
+print(f"Signature: {signature[0].bit_length()}, {signature[1].bit_length()}")
 
 # Xác minh chữ ký
 is_valid = ecdsa_verify(public_key, message, signature)

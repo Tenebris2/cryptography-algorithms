@@ -1,13 +1,7 @@
-from sympy import primerange
-import random
-from extended_euclide import generate_coprime_numbers, extended_euclide, math
-import sys
-from helper import generate_prime
-from helper import int_encrypt, generate_n_bit_prime
+from algorithms.helper import int_encrypt, generate_n_bit_prime
 import gmpy2
 import concurrent.futures
-
-# Generate a random 10-digit prime number
+import math
 
 
 def int_encrypt(x):
@@ -61,14 +55,14 @@ def dec(c, d, n):
 
 def choose_e(phi):
     # Commonly used prime exponent in RSA for efficiency and security
-    e = 65537
+    e = phi - 1
 
     # Ensure e is coprime to phi
     if math.gcd(phi, e) == 1:
         return e
     else:
         # Fallback: find an alternative if 65537 isn't suitable
-        for candidate in range(3, phi, 2):  # Start from 3, check odd numbers
+        for candidate in range(phi, 2, -2):  # Start from 3, check odd numbers
             if math.gcd(phi, candidate) == 1:
                 return candidate
         raise ValueError("Could not find a suitable 'e' that is coprime to phi.")
@@ -105,7 +99,6 @@ def rsa_cryptography():
     n = gmpy2.mul(p, q)
     phi = gmpy2.mul((p - 1), (q - 1))
     e = choose_e(phi)
-    print(str(p).__len__(), str(n).__len__())
     print(f"n : {n}")
     print(f"e: {e}")
     print(f"p: {p}\n q: {q}\n phi: {phi}")
@@ -122,47 +115,30 @@ def rsa_cryptography():
 
 
 def rsa_sign():
-    bound = 2048 * 2 * 2 * 2
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        # Parallel generation of primes p and q
-        future_p = executor.submit(generate_n_bit_prime, bound)
-        future_q = executor.submit(generate_n_bit_prime, bound)
-
-        # Wait for results and convert them to gmpy2 mpz
-        p = to_mpz(future_p.result())
-        q = to_mpz(future_q.result())
-    # p = generate_n_bit_prime(bound)
-    # q = generate_n_bit_prime(bound)
-
+    bound = 2048 * 2 * 2
+    p = to_mpz(generate_n_bit_prime(bound))
+    q = to_mpz(generate_n_bit_prime(bound))
+    # print(aks_primality_test(p))
     p = gmpy2.mpz(p)
     q = gmpy2.mpz(q)
-    # print(p, q)
-    # p = 123
-    # q = 149
-    # p = 6464557691
-    # q = 9272675903
 
     n = gmpy2.mul(p, q)
     phi = gmpy2.mul((p - 1), (q - 1))
     e = choose_e(phi)
-    print(str(p).__len__(), str(n).__len__())
-    print(f"n : {n}")
-    print(f"e: {e}")
-    print(f"p: {p}\n q: {q}\n phi: {phi}")
+    print(f"n : {n.bit_length()}")
+    print(f"e: {e.bit_length()}")
+    print(f"p: {p.bit_length()}\nq: {q.bit_length()}\n phi: {phi.bit_length()}")
 
     # e = generate_coprime_numbers(phi)
     plaintext = int_encrypt("BUIDUCANH")
-    print("Plaintext: ", plaintext)
+    print("Plaintext: ", plaintext.bit_length())
     sig = enc(plaintext, e, n)
-    print("Signed text:", sig)
+    print("Signed text:", sig.bit_length())
     decryption_key = get_decryption_key(e, phi)
-    print("Decryption key for checking the signature", decryption_key)
+    print("Decryption key for checking the signature", decryption_key.bit_length())
     decrypted = dec(sig, decryption_key, n)
 
     if plaintext == decrypted:
         print(True)
     else:
         print(False)
-
-
-rsa_sign()

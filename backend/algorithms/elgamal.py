@@ -2,7 +2,6 @@
 # a: 5 chu so
 
 from helper import generate_prime, generate_random_number, int_encrypt
-from ecc import EllipticCurve, Point
 from hashlib import sha256
 import requests
 
@@ -67,26 +66,6 @@ def generate_keys(key_size: int):
     return p, q, a, k
 
 
-class EllipticElGamal(ElGamal):
-    def __init__(self, a_, b_, p, a, k):
-        super().__init__(p, a, k)
-        self.elliptic_curve = EllipticCurve(p, a_, b_)
-
-    def find_point(self, x):
-        points = self.elliptic_curve.find_points_on_curve()
-        for point in points:
-            if point.x == x:
-                return point
-
-    def encode_message_as_point(self, message):
-        x = int(message) % self.p
-        result = self.elliptic_curve.self_multiply_generator(Point(0, 376), 85)
-        print(result)
-
-    def encrypt(self, message: int) -> (int, int):
-        return super().encrypt(message)
-
-
 class SigningElGamal(ElGamal):
     def sign(self, message: int) -> (int, int):
         sig_1 = pow(self.alpha, self.k, self.p)
@@ -104,36 +83,36 @@ class SigningElGamal(ElGamal):
 
 
 def elgamal_cryptography():
-    x = int_encrypt("BUIDUCANH")
+    message = int_encrypt("BUIDUCANH")
 
-    p, q, a, k = generate_keys(4096 * 2)
+    p, q, a, k = generate_keys(4096)
     elgamal = ElGamal(p, q, a, k)
-    c_1, c_2 = elgamal.encrypt(x)
+    print("p: ", p)
+    print("a: ", a)
+    print("k: ", k)
+    print("alpha: ", elgamal.alpha)
+    print("beta: ", elgamal.beta)
+    print("message: ", message)
+    c_1, c_2 = elgamal.encrypt(message)
+    print(f"Encrypted: ({c_1}, {c_2})")
     print(elgamal.decrypt(c_1, c_2))
 
 
-# def ecc_elgamal_main():
-#     p = 751
-#     a = 85
-#     k = 101
-#     a_ = -1
-#     b_ = 188
-#     secret_key = 85
-#     ecc_elgamal = EllipticElGamal(a_, b_, p, a, k)
-#     ecc_elgamal.encode_message_as_point(12)
-#
-
-
 def signed_elgamal_main():
-    p, q, a, k = generate_keys(4096 * 2)
+    p, q, a, k = generate_keys(4096)
 
     signed_elgamal = SigningElGamal(p, q, a, k)
-    message = 2000
-    c_1, c_2 = signed_elgamal.encrypt(message)
-    print(signed_elgamal.decrypt(c_1, c_2))
+    message = int_encrypt("BUIDUCANH")
+    print("p: ", p.bit_length())
+    print("a: ", a.bit_length())
+    print("k: ", k.bit_length())
+    print("alpha: ", signed_elgamal.alpha.bit_length())
+    print("beta: ", signed_elgamal.beta.bit_length())
+    print("message: ", message.bit_length())
     sig_1, sig_2 = signed_elgamal.sign(message)
+    print(f"Signature: ({sig_1.bit_length()}, {sig_2.bit_length()})")
     print(signed_elgamal.verify(message, sig_1, sig_2))
 
 
-# signed_elgamal_main()
-elgamal_cryptography()
+signed_elgamal_main()
+# elgamal_cryptography()
