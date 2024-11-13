@@ -1,13 +1,11 @@
-"""
-File to run algorithms
-"""
+from algorithms.rsa import rsa_cryptography
 
 
-def run_rsa():
+def run_rsa(message):
     """
     RSA Cryptography runner
     """
-    pass
+    return rsa_cryptography(message)
 
 
 def run_rsa_signature():

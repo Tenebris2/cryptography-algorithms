@@ -1,7 +1,17 @@
-from helper import int_encrypt, generate_n_bit_prime
+from algorithms.helper import int_encrypt, generate_n_bit_prime
 import gmpy2
 import concurrent.futures
 import math
+from dataclasses import dataclass
+
+
+@dataclass
+class RSA:
+    p: int
+    q: int
+    n: int
+    public_key: int
+    secret_key: int
 
 
 def int_encrypt(x):
@@ -74,9 +84,9 @@ def to_mpz(num):
 
 
 # 1000 chu so: rsa
-def rsa_cryptography():
+def rsa_cryptography(message):
 
-    bound = 2048 * 2 * 2
+    bound = 1024
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # Parallel generation of primes p and q
         future_p = executor.submit(generate_n_bit_prime, bound)
@@ -104,7 +114,7 @@ def rsa_cryptography():
     print(f"p: {p}\n q: {q}\n phi: {phi}")
 
     # e = generate_coprime_numbers(phi)
-    plaintext = int_encrypt("BUIDUCANH")
+    plaintext = int_encrypt(message)
     print("Plaintext: ", plaintext)
     encrypted = enc(plaintext, e, n)
     print("encrypted ciphertext:", encrypted)
@@ -112,6 +122,10 @@ def rsa_cryptography():
     print("decryption key", decryption_key)
     decrypted = dec(encrypted, decryption_key, n)
     print(f"decrypted plaintext:", decrypted)
+
+    rsa_object = RSA(p, q, n, e, decryption_key)
+
+    return encrypted, rsa_object
 
 
 def rsa_sign():
