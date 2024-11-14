@@ -32,11 +32,11 @@ form.addEventListener("submit", async (event) => {
     let displayData = "";
     for (const key in jsonData) {
       if (jsonData.hasOwnProperty(key)) {
-        displayData += `${key}: ${jsonData[key]}`;
+        displayData += `<span class="key">${key}</span>: ${jsonData[key]}`;
       }
     }
 
-    display.innerText = displayData;
+    display.innerHTML = displayData;
     display.addEventListener("animationend", () => {
       display.classList.remove(animation_class);
     });
