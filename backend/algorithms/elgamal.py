@@ -1,8 +1,8 @@
 # p: 6 chu so nguyen tu => Tim phan tu nguyen thuy
 # a: 5 chu so
 
-from helper import generate_prime, generate_random_number, int_encrypt
 from hashlib import sha256
+from algorithms.helper import *
 import requests
 
 
@@ -19,9 +19,9 @@ class ElGamal:
         c_2 = (message * pow(self.beta, self.k, self.p)) % self.p
         return (c_1, c_2)
 
-    def decrypt(self, c_1, c_2) -> int:
+    def decrypt(self, c_1, c_2) -> str:
         temp = pow(pow(c_1, self.a, self.p), -1, self.p) % self.p
-        return c_2 * (temp) % self.p
+        return decrypt_to_str(c_2 * (temp) % self.p)
 
 
 def primitive_root(p, q):
@@ -82,37 +82,94 @@ class SigningElGamal(ElGamal):
         return lhs == rhs
 
 
-def elgamal_cryptography():
-    message = int_encrypt("BUIDUCANH")
-
+def elgamal_cryptography(message_str):
     p, q, a, k = generate_keys(4096)
     elgamal = ElGamal(p, q, a, k)
-    print("p: ", p)
-    print("a: ", a)
-    print("k: ", k)
-    print("alpha: ", elgamal.alpha)
-    print("beta: ", elgamal.beta)
-    print("message: ", message)
+    message = int_encrypt(message_str)
     c_1, c_2 = elgamal.encrypt(message)
-    print(f"Encrypted: ({c_1}, {c_2})")
-    print(elgamal.decrypt(c_1, c_2))
+    decrypted = elgamal.decrypt(c_1, c_2)
+    return c_1, c_2, p, a, decrypted
 
 
-def signed_elgamal_main():
+def elgamal_signature(message_str):
     p, q, a, k = generate_keys(4096)
-
     signed_elgamal = SigningElGamal(p, q, a, k)
-    message = int_encrypt("BUIDUCANH")
-    print("p: ", p.bit_length())
-    print("a: ", a.bit_length())
-    print("k: ", k.bit_length())
-    print("alpha: ", signed_elgamal.alpha.bit_length())
-    print("beta: ", signed_elgamal.beta.bit_length())
-    print("message: ", message.bit_length())
+    message = int_encrypt(message_str)
     sig_1, sig_2 = signed_elgamal.sign(message)
-    print(f"Signature: ({sig_1.bit_length()}, {sig_2.bit_length()})")
-    print(signed_elgamal.verify(message, sig_1, sig_2))
+    verify = signed_elgamal.verify(message, sig_1, sig_2)
+    return sig_1, sig_2, verify
 
 
-signed_elgamal_main()
-# elgamal_cryptography()
+def elgamal_encrypt(message: int, alpha: int, beta: int, p: int, k: int) -> (int, int):
+    """
+    Hàm mã hóa thông điệp với hệ mật ElGamal.
+
+    Args:
+        message (int): Thông điệp cần mã hóa.
+        alpha (int): Số gốc nguyên thủy (primitive root) của hệ mật.
+        beta (int): Khóa công khai.
+        p (int): Số nguyên tố lớn.
+        k (int): Số ngẫu nhiên dùng trong quá trình mã hóa.
+
+    Returns:
+        (int, int): Cặp mã hóa (c1, c2).
+    """
+    c_1 = pow(alpha, k, p)
+    c_2 = (message * pow(beta, k, p)) % p
+    return c_1, c_2
+
+def elgamal_decrypt(c_1: int, c_2: int, alpha: int, a: int, p: int) -> str:
+    """
+    Hàm giải mã thông điệp với hệ mật ElGamal.
+
+    Args:
+        c_1 (int): Phần đầu của cặp mã hóa.
+        c_2 (int): Phần thứ hai của cặp mã hóa.
+        alpha (int): Số gốc nguyên thủy (primitive root).
+        a (int): Khóa bí mật.
+        p (int): Số nguyên tố lớn.
+
+    Returns:
+        int: Thông điệp gốc.
+    """
+    temp = pow(pow(c_1, a, p), -1, p)  # Inverse of alpha^a mod p
+    decrypted = (c_2 * temp) % p
+    return decrypt_to_str(decrypted)
+
+def elgamal_sign(message: int, alpha: int, a: int, k: int, p: int) -> (int, int):
+    """
+    Hàm ký thông điệp với hệ mật ElGamal.
+
+    Args:
+        message (int): Thông điệp cần ký.
+        alpha (int): Số gốc nguyên thủy.
+        a (int): Khóa bí mật của người ký.
+        k (int): Số ngẫu nhiên dùng trong quá trình ký.
+        p (int): Số nguyên tố lớn.
+
+    Returns:
+        (int, int): Cặp chữ ký (sig_1, sig_2).
+    """
+    sig_1 = pow(alpha, k, p)
+    sig_2 = ((message - a * sig_1) * pow(k, -1, p - 1)) % (p - 1)
+    return sig_1, sig_2
+
+def elgamal_verify(message_str: str, sig_1: int, sig_2: int, alpha: int, beta: int, p: int) -> bool:
+    """
+    Hàm xác minh chữ ký của thông điệp trong hệ mật ElGamal.
+
+    Args:
+        message (int): Thông điệp cần xác minh.
+        sig_1 (int): Phần đầu của chữ ký.
+        sig_2 (int): Phần thứ hai của chữ ký.
+        alpha (int): Số gốc nguyên thủy.
+        beta (int): Khóa công khai.
+        p (int): Số nguyên tố lớn.
+
+    Returns:
+        bool: Trả về True nếu chữ ký hợp lệ, False nếu không hợp lệ.
+    """
+    message = int_encrypt(message_str)
+    lhs = (pow(beta, sig_1, p) * pow(sig_1, sig_2, p)) % p
+    rhs = pow(alpha, message, p)
+    return lhs == rhs
