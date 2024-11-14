@@ -104,6 +104,7 @@ if __name__ == "__main__":
     # Generate key (p, q, n)
     p, q, n = generate_key(13)
 
+    print(f"p: {p}, q: {q}, n:{n}")
     # Given x, check if it's a quadratic residue
     x = random.randint(1, n - 1)
     while not is_quadratic_residue(x, n):

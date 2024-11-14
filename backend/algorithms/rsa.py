@@ -2,6 +2,16 @@ from algorithms.helper import *
 import gmpy2
 import concurrent.futures
 import math
+from dataclasses import dataclass
+
+
+@dataclass
+class RSA:
+    p: int
+    q: int
+    n: int
+    public_key: int
+    secret_key: int
 
 
 # Helper function to convert integer to string using custom decryption
@@ -47,6 +57,10 @@ def rsa_encrypt(message):
     public_key = e
     decrypted = rsa_decrypt(encrypted, private_key, n)
     return encrypted, private_key, n, public_key, decrypted
+
+    rsa_object = RSA(p, q, n, e, decryption_key)
+
+    return encrypted, rsa_object
 
 
 def rsa_decrypt(encrypted, private_key, n):
