@@ -6,25 +6,40 @@
   </head>
   <body>
     <div class="container">
+      <div id="toggler">
+        <label class="toggle">
+          <input class="toggle-checkbox" type="checkbox" id="decrypt" />
+          <div class="toggle-switch"></div>
+          <!--<span class="toggle-label">Decrypt</span>-->
+        </label>
+        <div id="exporter">
+          <button type="button" class="button-86">Export</button>
+        </div>
+      </div>
+
       <div id="form-container">
         <form id="input-form">
-          <button type="submit" id="json-getter" class="button-86">JSON</button>
-          <br />
-          <input
-            type="text"
-            name="message"
-            placeholder="Message"
-            id="message-input"
-          />
+          <div id="submit-buttons">
+            <button
+              type="submit"
+              class="button-86"
+              name="action"
+              value="encrypt"
+              id="function-btn"
+            >
+              Encrypt
+            </button>
+          </div>
         </form>
       </div>
       <div id="display"></div>
       <div class="dropdown">
-        <button class="dropbtn button-5">Select Algorithm</button>
-        <div class="dropdown-content">
-          <a href="#">RSA</a>
-          <a href="#">ElGamal</a>
-          <a href="#">ElEllipticCurve</a>
+        <button class="dropbtn button-5" id="algorithm-selector">
+          Select Algorithm
+        </button>
+        <div class="dropdown-content" id="dropdown-content-algorithms">
+          <button type="button" name="RSA">RSA</button>
+          <button type="button" name="ElGamal">ElGamal</button>
         </div>
       </div>
     </div>
