@@ -1,7 +1,9 @@
 """
 File to run algorithms
 """
+
 from algorithms.rsa import *
+
 
 async def run_rsa_enc(message: str):
     # Chạy tệp module1.py và truyền input_value cho nó
@@ -10,18 +12,16 @@ async def run_rsa_enc(message: str):
         "encrypted": str(encrypted),
         "private_key": str(private_key),
         "public_key": str(public_key),
-        "n":str(n),
-        "decrypted": str(decrypted)
+        "n": str(n),
+        "decrypted": str(decrypted),
     }
-    pass
 
-async def run_rsa_dec(encrypted:int, private_key:int, n:int):
+
+async def run_rsa_dec(encrypted: int, private_key: int, n: int):
     # Chạy tệp module1.py và truyền input_value cho nó
     decrypted = rsa_decrypt(encrypted, private_key, n)
-    return {
-        "decrypted": str(decrypted)
-    }
-    pass
+    return {"decrypted": str(decrypted)}
+
 
 async def run_rsa_sig(message: str):
     # Chạy tệp module1.py và truyền input_value cho nó
@@ -29,17 +29,14 @@ async def run_rsa_sig(message: str):
     return {
         "encrypted": str(encrypted),
         "private_key": str(private_key),
-        "n":str(n),
+        "n": str(n),
     }
-    pass
 
-async def run_rsa_ver(message:str, encrypted:int, private_key:int, n:int):
+
+async def run_rsa_ver(message: str, encrypted: int, private_key: int, n: int):
     # Chạy tệp module1.py và truyền input_value cho nó
-    verify = rsa_verify(message,encrypted, private_key, n)
-    return {
-        "Verified": verify
-    }
-    pass
+    verify = rsa_verify(message, encrypted, private_key, n)
+    return {"Verified": verify}
 
 
 def run_elgamal_enc():
