@@ -8,6 +8,7 @@
   --button-color: #89b482;
   --highlight-color: #ec6b64;
 }
+
 body {
   background-color: #111927;
   background-image: radial-gradient(
@@ -165,8 +166,9 @@ input[type="text"]:focus {
 }
 
 #input-form input[type="text"] {
-  animation: fadeIn 2s ease-in-out;
+  animation: fadeIn 1.25s ease-in-out;
 }
+
 @keyframes fadeIn {
   0% {
     opacity: 0; /* Start fully transparent */
@@ -179,4 +181,11 @@ input[type="text"]:focus {
 #submit-buttons {
   display: flex;
   gap: 20px;
+}
+
+#toggler {
+  display: flex;
+  flex-direction: column;
+
+  justify-content: space-between;
 }

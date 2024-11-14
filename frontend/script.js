@@ -20,6 +20,29 @@ const parameters = ["Message"];
 const decrypt_parameters = ["encrypted", "private_key", "n"];
 const decryptCheckbox = document.getElementById("decrypt");
 
+const exportDataBtn = document.getElementById("exporter");
+
+let previousJsonData = null;
+
+exportDataBtn.onclick = () => {
+  if (previousJsonData != null) {
+    // Create a Blob with the content
+    const blob = new Blob([JSON.stringify(previousJsonData)], {
+      type: "application/json",
+    });
+
+    // Create a temporary download link
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "data.json"; // Set the file name
+
+    // Trigger the download by clicking the link
+    link.click();
+
+    // Clean up
+    URL.revokeObjectURL(link.href);
+  }
+};
 decryptCheckbox.addEventListener("change", () => {
   if (
     decryptCheckbox.checked &&
@@ -112,6 +135,7 @@ async function callApi(message, url) {
     }
 
     let jsonData = await data.json(); // Await the JSON parsing
+    previousJsonData = jsonData;
     let displayData = "";
     for (const key in jsonData) {
       if (jsonData.hasOwnProperty(key)) {
