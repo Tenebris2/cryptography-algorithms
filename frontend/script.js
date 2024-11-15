@@ -2,25 +2,73 @@ const form = document.getElementById("input-form");
 const functionButton = document.getElementById("function-btn");
 const display = document.getElementById("display");
 
-// rsa
-const rsaEncryptionURL = "http://localhost:8000/rsa-encrypt";
-const rsaDecryptionURL = "http://localhost:8000/rsa-decrypt";
-
+const url = "http://localhost:8000";
 //animation class
 const animation_class = "text-writer-animation";
-const defaultAlgorithmValue = "Select Algorithm";
-const dropdown_contents = document.getElementById(
-  "dropdown-content-algorithms",
-);
 const algorithm_selector = document.getElementById("algorithm-selector");
-
-const algorithms = dropdown_contents.querySelectorAll("button");
-
-const parameters = ["Message"];
-const decrypt_parameters = ["encrypted", "private_key", "n"];
 const decryptCheckbox = document.getElementById("decrypt");
-
 const exportDataBtn = document.getElementById("exporter");
+const Algorithms = Object.freeze({
+  RSACrypto: "RSA-Cryptography",
+  ElGamalCrypto: "ElGamal-Cryptography",
+  RSASign: "RSA-Signature",
+  ElGamalSign: "ElGamal-Signature",
+});
+
+const AlgorithmParameters = Object.freeze({
+  [Algorithms.RSACrypto]: Object.freeze({
+    encrypt: ["message"],
+    decrypt: ["encrypted", "privateKey", "n"],
+  }),
+  [Algorithms.ElGamalCrypto]: Object.freeze({
+    encrypt: ["message"],
+    decrypt: ["encrypted-1", "encrypted-2", "alpha", "p", "a"],
+  }),
+});
+const APIURLs = {
+  [Algorithms.RSACrypto]: {
+    encrypt: url + "/rsa-encrypt",
+    decrypt: url + "/rsa-decrypt",
+  },
+  [Algorithms.ElGamalCrypto]: {
+    encrypt: url + "/elgamal-encrypt",
+    decrypt: url + "/elgamal-decrypt",
+  },
+};
+
+const AlgorithmKeys = Object.freeze(
+  Object.fromEntries(
+    Object.entries(Algorithms).map(([key, value]) => [value, key]),
+  ),
+);
+
+algorithm_selector.innerText = Algorithms.RSACrypto;
+const dropdownContent = document.getElementById("dropdown-content-algorithms");
+
+Object.keys(Algorithms).forEach((key) => {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.name = Algorithms[key]; // You can use the key (e.g., "RSACrypto") or a custom name
+  button.innerText = Algorithms[key].split(" ")[0]; // Extract the algorithm name, e.g., "RSA" from "RSA Cryptography"
+
+  dropdownContent.appendChild(button);
+});
+
+const algorithms = dropdownContent.querySelectorAll("button");
+algorithms.forEach((algorithm_button) => {
+  algorithm_button.onclick = () => {
+    // set the checkbox the default
+    functionButton.innerText = "Encrypt";
+
+    let currentAlgo = algorithm_selector.innerText;
+    decryptCheckbox.checked = false;
+    removeFormInputs();
+    // remove second children from there
+    addParameters(AlgorithmParameters[currentAlgo].encrypt);
+    algorithm_selector.innerText = algorithm_button.name;
+    console.log(algorithm_selector);
+  };
+});
 
 let previousJsonData = null;
 
@@ -44,24 +92,19 @@ exportDataBtn.onclick = () => {
   }
 };
 decryptCheckbox.addEventListener("change", () => {
-  if (
-    decryptCheckbox.checked &&
-    algorithm_selector.innerText != defaultAlgorithmValue
-  ) {
-    console.log(algorithm_selector.innerText);
-    functionButton.innerText = "Decrypt";
+  removeFormInputs();
 
-    while (form.children.length >= 2) {
-      form.removeChild(form.children[1]);
-    }
-    // remove second children from there
-    decrypt_parameters.forEach((param) => {
-      let newParameter = createNewParameter(param);
-      form.appendChild(newParameter);
-    });
+  let currentAlgo = algorithm_selector.innerText;
+
+  if (decryptCheckbox.checked) {
+    console.log(decryptCheckbox.checked);
+    functionButton.innerText = "Decrypt";
+    addParameters(AlgorithmParameters[currentAlgo].decrypt);
   } else {
     functionButton.innerText = "Encrypt";
     console.log("Unchecked");
+
+    addParameters(AlgorithmParameters[currentAlgo].encrypt);
   }
 });
 
@@ -70,32 +113,16 @@ form.addEventListener("submit", async (event) => {
   const formData = new FormData(event.target);
   let message = jsonifyFormData(formData);
   // means it is encryption time
+  //
+  let currentAlgo = algorithm_selector.innerText;
+
   if (!decryptCheckbox.checked) {
-    callApi(message, rsaEncryptionURL);
+    callApi(message, APIURLs[currentAlgo].encrypt);
   } else {
-    callApi(message, rsaDecryptionURL);
+    callApi(message, APIURLs[currentAlgo].decrypt);
   }
 });
 
-algorithms.forEach((algorithm_button) => {
-  algorithm_button.onclick = () => {
-    console.log(algorithm_button.name);
-    // set the checkbox the default
-    functionButton.innerText = "Encrypt";
-
-    decryptCheckbox.checked = false;
-    while (form.children.length >= 2) {
-      form.removeChild(form.children[1]);
-    }
-    // remove second children from there
-    parameters.forEach((param) => {
-      let newParameter = createNewParameter(param);
-      form.appendChild(newParameter);
-    });
-
-    algorithm_selector.innerText = algorithm_button.name;
-  };
-});
 function jsonifyFormData(FormData) {
   let formObject = {};
   FormData.forEach((value, key) => {
@@ -152,4 +179,17 @@ async function callApi(message, url) {
   }
 
   display.classList.add(animation_class);
+}
+
+function removeFormInputs() {
+  while (form.children.length >= 2) {
+    form.removeChild(form.children[1]);
+  }
+}
+
+function addParameters(parameters) {
+  parameters.forEach((param) => {
+    let newParameter = createNewParameter(param);
+    form.appendChild(newParameter);
+  });
 }

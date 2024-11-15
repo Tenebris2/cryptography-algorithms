@@ -5,6 +5,8 @@ from hashlib import sha256
 from algorithms.helper import *
 import requests
 
+elgamal_bits = 2048
+
 
 class ElGamal:
     def __init__(self, p, q, a, k):
@@ -83,7 +85,7 @@ class SigningElGamal(ElGamal):
 
 
 def elgamal_cryptography(message_str):
-    p, q, a, k = generate_keys(4096)
+    p, q, a, k = generate_keys(elgamal_bits)
     elgamal = ElGamal(p, q, a, k)
     message = int_encrypt(message_str)
     c_1, c_2 = elgamal.encrypt(message)
@@ -92,7 +94,7 @@ def elgamal_cryptography(message_str):
 
 
 def elgamal_signature(message_str):
-    p, q, a, k = generate_keys(4096)
+    p, q, a, k = generate_keys(elgamal_bits)
     signed_elgamal = SigningElGamal(p, q, a, k)
     message = int_encrypt(message_str)
     sig_1, sig_2 = signed_elgamal.sign(message)
@@ -118,6 +120,7 @@ def elgamal_encrypt(message: int, alpha: int, beta: int, p: int, k: int) -> (int
     c_2 = (message * pow(beta, k, p)) % p
     return c_1, c_2
 
+
 def elgamal_decrypt(c_1: int, c_2: int, alpha: int, a: int, p: int) -> str:
     """
     Hàm giải mã thông điệp với hệ mật ElGamal.
@@ -135,6 +138,7 @@ def elgamal_decrypt(c_1: int, c_2: int, alpha: int, a: int, p: int) -> str:
     temp = pow(pow(c_1, a, p), -1, p)  # Inverse of alpha^a mod p
     decrypted = (c_2 * temp) % p
     return decrypt_to_str(decrypted)
+
 
 def elgamal_sign(message: int, alpha: int, a: int, k: int, p: int) -> (int, int):
     """
@@ -154,7 +158,10 @@ def elgamal_sign(message: int, alpha: int, a: int, k: int, p: int) -> (int, int)
     sig_2 = ((message - a * sig_1) * pow(k, -1, p - 1)) % (p - 1)
     return sig_1, sig_2
 
-def elgamal_verify(message_str: str, sig_1: int, sig_2: int, alpha: int, beta: int, p: int) -> bool:
+
+def elgamal_verify(
+    message_str: str, sig_1: int, sig_2: int, alpha: int, beta: int, p: int
+) -> bool:
     """
     Hàm xác minh chữ ký của thông điệp trong hệ mật ElGamal.
 

@@ -21,7 +21,7 @@ body {
   font-family: "JetBrains Mono", monospace;
   color: var(--text-color);
   display: flex;
-  height: 90vh; /* Optional: Set height to full viewport height */
+  min-height: 90vh; /* Optional: Set height to full viewport height */
   justify-content: center;
 }
 
