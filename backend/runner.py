@@ -7,7 +7,8 @@ from algorithms.elgamal import *
 from algorithms.ECElGamal import *
 from algorithms.helper import *
 
-#RSA
+
+# RSA
 async def run_rsa_enc(message: str):
     # Chạy tệp module1.py và truyền input_value cho nó
     encrypted, private_key, public_key, decrypted = rsa_encrypt(message)
@@ -49,15 +50,12 @@ async def run_elgamal_enc(message:str):
         "public_key(p, alpha)": f"({p}, {alpha})",
         "decrypted": str(decrypted)
     }
-    pass
 
-async def run_elgamal_sig(message:str):
+
+async def run_elgamal_sig(message: str):
     sig_1, sig_2, verify = elgamal_signature(message)
-    return {
-        "signature": f"({sig_1}, {sig_2})",
-        "verify": str(verify)
-    }
-    pass
+    return {"signature": f"({sig_1}, {sig_2})", "verify": str(verify)}
+
 
 async def run_elgamal_dec(c_1: int, c_2: int, a: int, p: int):
     decrypted = elgamal_decrypt(c_1, c_2, a, p)
@@ -66,14 +64,15 @@ async def run_elgamal_dec(c_1: int, c_2: int, a: int, p: int):
     }
     pass
 
-async def run_elgamal_ver(message: str, sig_1: int, sig_2: int, alpha: int, beta: int, p: int):
-    verify = elgamal_verify(message, sig_1, sig_2, alpha, beta, p)
-    return {
-        "verify": str(verify)
-    }
-    pass
 
-#Elliptic vs ECDSA
+async def run_elgamal_ver(
+    message: str, sig_1: int, sig_2: int, alpha: int, beta: int, p: int
+):
+    verify = elgamal_verify(message, sig_1, sig_2, alpha, beta, p)
+    return {"verify": str(verify)}
+
+
+# Elliptic vs ECDSA
 async def run_ecelgamal_enc(message: str):
     # Chuyển đổi message thành điểm trên đường cong (giả định về cách ánh xạ message thành tọa độ)
     point_1, point_2 = message_to_point(message)
@@ -94,8 +93,9 @@ async def run_ecelgamal_enc(message: str):
         "encrypted": f"{c_1}, {c_2}",
         "private_key": f"{private_key}",
         "public_key": f"{public_key}",
-        "decrypted": str(decrypted_point)
+        "decrypted": str(decrypted_point),
     }
+
 
 # Hàm ký số ECDSA với đầu vào là thông điệp cần ký
 async def run_ecelgamal_sig(message: str, private_key: int):
@@ -113,6 +113,7 @@ async def run_ecelgamal_sig(message: str, private_key: int):
         "public_key(x,y)": f"{public_key}",
         "verify": str(verify)
     }
+
 
 # Hàm giải mã ElGamal với đầu vào là cặp mã và khóa riêng
 async def run_ecelgamal_dec(ciphertext, private_key):
