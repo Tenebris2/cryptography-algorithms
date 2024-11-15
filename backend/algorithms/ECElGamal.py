@@ -5,6 +5,72 @@ from algorithms.curves import SECP521r1
 # Khởi tạo các tham số đường cong SECP521r1
 p, a, b, G, n = SECP521r1()
 
+def mod_sqrt(a, p):
+    """Tính căn bậc hai modulo p (nếu có) sử dụng thuật toán Tonelli-Shanks"""
+    # Trả về căn bậc hai của a mod p, nếu có
+    if pow(a, (p - 1) // 2, p) != 1:
+        return None  # Không có căn bậc hai (a không phải là một số chính phương mod p)
+    # Trường hợp p ≡ 3 (mod 4) thì có thể tính trực tiếp
+    if p % 4 == 3:
+        return pow(a, (p + 1) // 4, p)
+    
+    # Thuật toán Tonelli-Shanks
+    s = 0
+    q = p - 1
+    while q % 2 == 0:
+        s += 1
+        q //= 2
+    z = 2
+    while pow(z, (p - 1) // 2, p) == 1:
+        z += 1
+    m = s
+    c = pow(z, q, p)
+    t = pow(a, q, p)
+    r = pow(a, (q + 1) // 2, p)
+    while t != 0 and t != 1:
+        t2i = t
+        i = 0
+        for i in range(1, m):
+            t2i = pow(t2i, 2, p)
+            if t2i == 1:
+                break
+        b = pow(c, 2 ** (m - i - 1), p)
+        m = i
+        c = pow(b, 2, p)
+        t = (t * b * b) % p
+        r = (r * b) % p
+    return r if t == 1 else None
+
+def message_to_point(message):
+    # Băm thông điệp
+    hashed_message = hashlib.sha512(message.encode()).hexdigest()
+    
+    # Lấy 128 ký tự hex đầu tiên (64 byte) và chuyển thành số nguyên
+    x = int(hashed_message[:128], 16)  # Dùng 128 ký tự hex (64 byte)
+
+    # Tính toán giá trị phải của phương trình đường cong elliptic: x^3 + ax + b mod p
+    rhs = (x**3 + a * x + b) % p
+
+    # Tính căn bậc hai modulo p
+    y = mod_sqrt(rhs, p)
+    
+    # Nếu không có căn bậc hai, thử với giá trị x khác (tăng x)
+    attempts = 0
+    while y is None and attempts < 100:
+        x += 1  # Tăng x để thử lại
+        rhs = (x**3 + a * x + b) % p
+        y = mod_sqrt(rhs, p)
+        attempts += 1
+    
+    if y is None:
+        raise ValueError("Không thể tìm thấy một điểm hợp lệ trên đường cong.")
+    
+    # Đảm bảo y có giá trị dương
+    if y % 2 == 1:
+        y = p - y
+    
+    return (x, y)
+
 # Hàm tính nghịch đảo modulo sử dụng thuật toán Euclid mở rộng
 def mod_inv(x, p):
     if x == 0:

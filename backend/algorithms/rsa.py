@@ -47,16 +47,18 @@ def rsa_encrypt(message):
         p = gmpy2.mpz(future_p.result())
         q = gmpy2.mpz(future_q.result())
 
-    n = gmpy2.mul(p, q)
+    n = gmpy2.mpz(gmpy2.mul(p, q))
     phi = gmpy2.mul((p - 1), (q - 1))
-    e = choose_e(phi)
+    e = gmpy2.mpz(choose_e(phi))
 
     plaintext = int_encrypt(message)
     encrypted = enc(plaintext, e, n)
-    private_key = get_decryption_key(e, phi)
-    public_key = e
-    decrypted = rsa_decrypt(encrypted, private_key, n)
-    return encrypted, private_key, n, public_key, decrypted
+    d = gmpy2.mpz(get_decryption_key(e, phi))
+    public_key = (int(e), int(n))
+    decrypted = rsa_decrypt(encrypted, d, n)
+    private_key = (int(d), int(n))
+    
+    return encrypted, private_key, public_key, decrypted
 
 def rsa_decrypt(encrypted, private_key, n):
     decrypted_num = dec(encrypted, private_key, n)
@@ -73,15 +75,17 @@ def rsa_signature(message):
     e = choose_e(phi)
 
     plaintext = int_encrypt(message)
-    signature = enc(plaintext, e, n)
-    private_key = get_decryption_key(e, phi)
+    d = get_decryption_key(e, phi)
+    signature = enc(plaintext, d, n)
+    private_key = (int(d), int(n))
+    public_key = (int(e), int(n))
+    return signature, private_key, public_key
 
-    return signature, private_key, n
 
-
-def rsa_verify(message, signature, private_key, n):
+def rsa_verify(message, signature, public_key):
     plaintext = int_encrypt(message)
-    decrypted_signature = dec(signature, private_key, n)
+    e, n = public_key
+    decrypted_signature = dec(signature, e, n)
 
     return plaintext == decrypted_signature
 

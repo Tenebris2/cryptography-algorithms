@@ -77,3 +77,7 @@ def generate_random_number(bound):
     upper_bound = bound - 1  # Largest number with 'bound' digits
     a = random.randint(lower_bound, upper_bound)
     return a
+def split_key(key: str):
+    filtered_key = ''.join([char for char in key if char.isdigit() or char == ','])
+    result = filtered_key.split(",")
+    return int(result[0]), int(result[1])

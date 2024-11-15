@@ -17,7 +17,7 @@ class ElGamal:
     def encrypt(self, message: int) -> (int, int):
         c_1 = pow(self.alpha, self.k, self.p)
         c_2 = (message * pow(self.beta, self.k, self.p)) % self.p
-        return (c_1, c_2)
+        return (c_1, c_2, self.alpha)
 
     def decrypt(self, c_1, c_2) -> str:
         temp = pow(pow(c_1, self.a, self.p), -1, self.p) % self.p
@@ -78,7 +78,10 @@ class SigningElGamal(ElGamal):
     def verify(self, message: int, sig_1, sig_2) -> bool:
         lhs = pow(self.beta, sig_1, self.p) * pow(sig_1, sig_2, self.p) % self.p
         rhs = pow(self.alpha, message, self.p)
-
+        print("Elgamal parameters:")
+        print("alpha: ", self.alpha)
+        print("beta: ", self.beta)
+        print("p: ", self.p)
         return lhs == rhs
 
 
@@ -86,9 +89,9 @@ def elgamal_cryptography(message_str):
     p, q, a, k = generate_keys(4096)
     elgamal = ElGamal(p, q, a, k)
     message = int_encrypt(message_str)
-    c_1, c_2 = elgamal.encrypt(message)
+    c_1, c_2, alpha = elgamal.encrypt(message)
     decrypted = elgamal.decrypt(c_1, c_2)
-    return c_1, c_2, p, a, decrypted
+    return c_1, c_2, p, a, alpha, decrypted
 
 
 def elgamal_signature(message_str):
@@ -118,7 +121,7 @@ def elgamal_encrypt(message: int, alpha: int, beta: int, p: int, k: int) -> (int
     c_2 = (message * pow(beta, k, p)) % p
     return c_1, c_2
 
-def elgamal_decrypt(c_1: int, c_2: int, alpha: int, a: int, p: int) -> str:
+def elgamal_decrypt(c_1: int, c_2: int, a: int, p: int) -> str:
     """
     Hàm giải mã thông điệp với hệ mật ElGamal.
 

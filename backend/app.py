@@ -2,6 +2,7 @@ import fastapi
 from pydantic import *
 from runner import *
 from fastapi.middleware.cors import CORSMiddleware
+from algorithms.helper import *
 
 app = fastapi.FastAPI()
 
@@ -13,34 +14,42 @@ class MessageInput(BaseModel):
     message: str
     
 class RSADecryptInput(BaseModel):
-    encrypted: str  # Dữ liệu được mã hóa dạng chuỗi
-    private_key: str  # Khóa riêng dạng chuỗi
-    n: str  # Số nguyên n dạng chuỗi
+    encrypted: str  # khong can tach
+    private_key: str  # (d,n)
     
 class RSAVerifyInput(BaseModel):
     message: str
-    encrypted: str  # Dữ liệu được mã hóa dạng chuỗi
-    private_key: str  # Khóa riêng dạng chuỗi
-    n: str  # Số nguyên n dạng chuỗi
+    signature: str  
+    public_key: str  # (e,n)
 
 class ElGamalDecryptInput(BaseModel):
-    c_1: str  # Dữ liệu được mã hóa dạng chuỗi
-    c_2: str  # Khóa riêng dạng chuỗi
-    alpha: str  # Số nguyên n dạng chuỗi
-    a: str
-    p: str
+    encrypted: str # (c1, c2)
+    private_key: str # (p, a)
 
 class ElGamalVerifyInput(BaseModel):
     message: str
-    c_1: str  # Dữ liệu được mã hóa dạng chuỗi
-    c_2: str  # Khóa riêng dạng chuỗi
+    signature: str #(sig_1, sig_2)
     alpha: str  # Số nguyên n dạng chuỗi
-    a: str
+    beta: str
     p: str
+    
+class ECDSADecryptInput(BaseModel):
+    c_1: str
+    c_2: str 
+    private_key: str
+    
+class ECDSASignatureInput(BaseModel):
+    message: str
+    private_key: str #so ngau nhien minh chon
+    
+class ECDSAVerifyInput(BaseModel):
+    message: str
+    signature: str #(r,s)
+    public_key: str #(x,y)
     
 @app.get("/")
 def read_root():
-    return {"State": "Active"}
+    return {"Status": "Active"}
 
 @app.post("/rsa-encrypt")
 async def rsa_encrypt(input_data: MessageInput):
@@ -50,9 +59,9 @@ async def rsa_encrypt(input_data: MessageInput):
 @app.post("/rsa-decrypt")
 async def rsa_decrypt(input_data: RSADecryptInput):
     encrypted = int(input_data.encrypted)
-    private_key = int(input_data.private_key)
-    n = int(input_data.n)
-    result = await run_rsa_dec(encrypted,private_key,n)
+    private_key = input_data.private_key
+    d, n = split_key(private_key)
+    result = await run_rsa_dec(encrypted,d,n)
     return result
 
 @app.post("/rsa-signature")
@@ -63,14 +72,14 @@ async def rsa_signature(input_data: MessageInput):
 @app.post("/rsa-verify")
 async def rsa_verify(input_data: RSAVerifyInput):
     message = str(input_data.message)
-    encrypted = int(input_data.encrypted)
-    private_key = int(input_data.private_key)
-    n = int(input_data.n)
-    result = await run_rsa_ver(message, encrypted,private_key,n)
+    signature = int(input_data.signature)
+    public_key = input_data.public_key
+    e, n = split_key(public_key)
+    pubkey = (e, n)
+    result = await run_rsa_ver(message, signature, pubkey)
     return result
     
 #ElGamal
-    
 @app.post("/elgamal-encrypt")
 async def elgamal_encrypt(input_data: MessageInput):
     result = await run_elgamal_enc(input_data.message)
@@ -84,23 +93,22 @@ async def elgamal_signature(input_data: MessageInput):
 
 @app.post("/elgamal-decrypt")
 async def elgamal_decrypt(input_data: ElGamalDecryptInput):
-    c_1 = int(input_data.c_1)
-    c_2 = int(input_data.c_2)
-    alpha = int(input_data.alpha)
-    a = int(input_data.a)
-    p = int(input_data.p)
-    result = await run_elgamal_dec(c_1, c_2, alpha, a, p)
+    encrypted = input_data.encrypted
+    c_1, c_2 = split_key(encrypted)
+    private_key = input_data.private_key
+    p, a = split_key(private_key)
+    result = await run_elgamal_dec(c_1, c_2, a, p)
     return result
 
 @app.post("/elgamal-verify")
-async def elgamal_verify(input_data: ElGamalDecryptInput):
+async def elgamal_verify(input_data: ElGamalVerifyInput):
     message = str(input_data.message)
-    c_1 = int(input_data.c_1)
-    c_2 = int(input_data.c_2)
+    signature = input_data.signature
+    sig_1, sig_2 = split_key(signature)
     alpha = int(input_data.alpha)
-    a = int(input_data.a)
+    beta = int(input_data.beta)
     p = int(input_data.p)
-    result = await run_elgamal_ver(message ,c_1, c_2, alpha, a, p)
+    result = await run_elgamal_ver(message ,sig_1, sig_2, alpha, beta, p)
     return result
 
 #EcElgamal - encrypt
@@ -110,32 +118,31 @@ async def ecelgamal_encrypt(input_data: MessageInput):
     return result
 
 # ECElGamal (ECDSA) - Signature
-@app.post("/ecelgamal-signature")
-async def ecelgamal_signature(input_data: MessageInput):
-    result = await run_ecelgamal_sig(input_data.message)
+@app.post("/ecdsa-signature")
+async def ecelgamal_signature(input_data: ECDSASignatureInput):
+    result = await run_ecelgamal_sig(input_data.message, int(input_data.private_key))
     return result
 
 # ECElGamal (ECDSA) - Decrypt
 @app.post("/ecelgamal-decrypt")
-async def ecelgamal_decrypt(input_data: ElGamalDecryptInput):
-    c_1 = int(input_data.c_1)
-    c_2 = int(input_data.c_2)
-    alpha = int(input_data.alpha)
-    a = int(input_data.a)
-    p = int(input_data.p)
-    result = await run_ecelgamal_dec(c_1, c_2, alpha, a, p)
+async def ecelgamal_decrypt(input_data: ECDSADecryptInput):
+    c_1 = input_data.c_1
+    c_2 = input_data.c_2
+    C_1 = split_key(c_1)
+    C_2 = split_key(c_2)
+    private_key = int(input_data.private_key)
+    result = await run_ecelgamal_dec((C_1, C_2), private_key)
     return result
 
 # ECElGamal (ECDSA) - Verify
-@app.post("/ecelgamal-verify")
-async def ecelgamal_verify(input_data: ElGamalVerifyInput):
+@app.post("/ecdsa-verify")
+async def ecelgamal_verify(input_data: ECDSAVerifyInput):
     message = str(input_data.message)
-    c_1 = int(input_data.c_1)
-    c_2 = int(input_data.c_2)
-    alpha = int(input_data.alpha)
-    a = int(input_data.a)
-    p = int(input_data.p)
-    result = await run_ecelgamal_ver(message, c_1, c_2, alpha, a, p)
+    signature = input_data.signature
+    signatures = split_key(signature)
+    public_key = input_data.public_key
+    publickey = split_key(public_key)
+    result = await run_ecelgamal_ver(message, signatures, publickey)
     return result
 
 @app.post("/aks-check-prime")
