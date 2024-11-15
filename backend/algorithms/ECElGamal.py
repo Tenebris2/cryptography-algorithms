@@ -1,16 +1,11 @@
-from hashlib import sha256
-from curves import SECP521r1
+import hashlib
+import random
+from algorithms.curves import SECP521r1
 
-# Các tham số đường cong secp256k1
-
+# Khởi tạo các tham số đường cong SECP521r1
 p, a, b, G, n = SECP521r1()
 
-
-# Hàm tính nghịch đảo modulo sử dụng Thuật toán Euclid mở rộng
-def generate_keys():
-    pass
-
-
+# Hàm tính nghịch đảo modulo sử dụng thuật toán Euclid mở rộng
 def mod_inv(x, p):
     if x == 0:
         raise ZeroDivisionError("Không tồn tại nghịch đảo")
@@ -22,7 +17,6 @@ def mod_inv(x, p):
         lm, low, hm, high = nm, new, lm, low
     return lm % p
 
-
 # Phép cộng điểm trên đường cong elliptic
 def point_add(P, Q):
     if P is None:
@@ -31,7 +25,7 @@ def point_add(P, Q):
         return P
     if P == Q:
         if P[1] == 0:
-            raise ValueError("Point P is at infinity or vertical tangent.")
+            return None  # Điểm tại vô cực
         l = (3 * P[0] * P[0] + a) * mod_inv(2 * P[1], p) % p
     else:
         l = (Q[1] - P[1]) * mod_inv(Q[0] - P[0], p) % p
@@ -39,8 +33,7 @@ def point_add(P, Q):
     y = (l * (P[0] - x) - P[1]) % p
     return (x, y)
 
-
-# Phép nhân điểm (dùng kỹ thuật nhân đôi và cộng - Double and Add)
+# Phép nhân điểm (nhân đôi và cộng - Double and Add)
 def scalar_mult(k, P):
     R = None
     while k:
@@ -50,71 +43,83 @@ def scalar_mult(k, P):
         k >>= 1
     return R
 
-
-import random
-
-
+# Mã hóa ElGamal trên đường cong elliptic
 def encrypt(plain_point, public_key):
     k = random.randint(1, n - 1)
-    C1 = scalar_mult(k, G)
+    C1 = scalar_mult(k, G)  # Điểm công khai
     shared_secret = scalar_mult(k, public_key)
-    C2 = point_add(plain_point, shared_secret)
+    C2 = point_add(plain_point, shared_secret)  # Tạo điểm mã hóa
     return (C1, C2)
 
-
+# Giải mã ElGamal trên đường cong elliptic
 def decrypt(ciphertext, private_key):
     C1, C2 = ciphertext
     shared_secret = scalar_mult(private_key, C1)
-    neg_shared_secret = (shared_secret[0], -shared_secret[1] % p)
+    neg_shared_secret = (shared_secret[0], -shared_secret[1] % p)  # Điểm đối
     plain_point = point_add(C2, neg_shared_secret)
     return plain_point
 
-
-def ecdsa_sig(msg, private_key):
-    z = sha256(msg)
+# Tạo chữ ký số ECDSA
+def ecdsa_sign(message, private_key):
+    z = int(hashlib.sha256(message.encode()).hexdigest(), 16)  # Băm thành số nguyên
     while True:
-        k = random.randint(1, N - 1)
-        R = elliptic_multiply(k, G)
-        r = r[0] % n
+        k = random.randint(1, n - 1)
+        R = scalar_mult(k, G)
+        r = R[0] % n
         if r == 0:
             continue
-        s = (pow(k, -1, n) * (z + r * private_key)) % n
+        k_inv = mod_inv(k, n)
+        s = (k_inv * (z + r * private_key)) % n
         if s != 0:
             break
     return (r, s)
 
-
-def ecdsa_ver(msg, signature, public_key):
+# Xác minh chữ ký số ECDSA
+def ecdsa_verify(message, signature, public_key):
     r, s = signature
     if not (1 <= r < n and 1 <= s < n):
-        return false
-    z = sha256(msg)
-    w = pow(s, -1, n)
+        return False
+    z = int(hashlib.sha256(message.encode()).hexdigest(), 16)
+    w = mod_inv(s, n)
     u1 = (z * w) % n
     u2 = (r * w) % n
-    p = elliptic_add(elliptic_multiply(u1, g), elliptic_multiply(u2, public_key))
-    return p[0] % n == r
+    P = point_add(scalar_mult(u1, G), scalar_mult(u2, public_key))
+    return P is not None and (P[0] % n) == r
 
-
+# Chạy thử mã hóa/giải mã và ký/xác minh
 def main():
+    # Tạo khóa riêng và khóa công khai
     private_key = random.randint(1, n - 1)
     public_key = scalar_mult(private_key, G)
 
-    plain_point = (123, 456)
+    # Điểm để mã hóa (ví dụ dữ liệu hoặc thông điệp dưới dạng tọa độ trên đường cong)
+    plain_point = (123456, 789012)  # Đây là ví dụ, điểm cần nằm trên đường cong elliptic
 
-    print("p: ", p)
-    print("a: ", a)
-    print("b: ", b)
-    print("G: ", G)
-    print("n: ", n)
-    ciphertext = encrypt(plain_point, public_key)
     print("Public key:", public_key)
-    print("Ciphertext:", ciphertext)
 
+    # Mã hóa và giải mã
+    ciphertext = encrypt(plain_point, public_key)
     decrypted_point = decrypt(ciphertext, private_key)
 
-    print("Private key:", private_key)
+    print("Original point:", plain_point)
+    print("Ciphertext:", ciphertext)
     print("Decrypted point:", decrypted_point)
 
+    # Kiểm tra mã hóa/giải mã thành công
+    if plain_point == decrypted_point:
+        print("Decryption successful!")
+    else:
+        print("Decryption failed!")
 
-main()
+    # Ký và xác minh thông điệp
+    message = "Hello, Elliptic Curve!"
+    signature = ecdsa_sign(message, private_key)
+    is_valid = ecdsa_verify(message, signature, public_key)
+
+    print("Message:", message)
+    print("Signature:", signature)
+    print("Signature valid:", is_valid)
+
+
+if __name__ == "__main__":
+    main()

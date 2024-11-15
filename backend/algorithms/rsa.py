@@ -58,11 +58,6 @@ def rsa_encrypt(message):
     decrypted = rsa_decrypt(encrypted, private_key, n)
     return encrypted, private_key, n, public_key, decrypted
 
-    rsa_object = RSA(p, q, n, e, decryption_key)
-
-    return encrypted, rsa_object
-
-
 def rsa_decrypt(encrypted, private_key, n):
     decrypted_num = dec(encrypted, private_key, n)
     return decrypt_to_str(decrypted_num)
