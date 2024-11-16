@@ -102,7 +102,7 @@ def elgamal_signature(message_str):
     message = int_encrypt(message_str)
     sig_1, sig_2 = signed_elgamal.sign(message)
     verify = signed_elgamal.verify(message, sig_1, sig_2)
-    return sig_1, sig_2, verify
+    return sig_1, sig_2, signed_elgamal.alpha, signed_elgamal.beta, signed_elgamal.p
 
 
 def elgamal_encrypt(message: int, alpha: int, beta: int, p: int, k: int) -> (int, int):
@@ -122,6 +122,7 @@ def elgamal_encrypt(message: int, alpha: int, beta: int, p: int, k: int) -> (int
     c_1 = pow(alpha, k, p)
     c_2 = (message * pow(beta, k, p)) % p
     return c_1, c_2
+
 
 def elgamal_decrypt(c_1: int, c_2: int, a: int, p: int) -> str:
     """

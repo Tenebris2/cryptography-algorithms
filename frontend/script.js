@@ -13,16 +13,35 @@ const Algorithms = Object.freeze({
   ElGamalCrypto: "ElGamal-Cryptography",
   RSASign: "RSA-Signature",
   ElGamalSign: "ElGamal-Signature",
+  EllipticCurveCrypto: "Elliptic-Curve-Cryptography",
+  EllipticCurveSign: "Elliptic-Curve-Signature",
 });
 
 const AlgorithmParameters = Object.freeze({
   [Algorithms.RSACrypto]: Object.freeze({
     encrypt: ["message"],
-    decrypt: ["encrypted", "privateKey", "n"],
+    decrypt: ["encrypted", "private_key"],
   }),
   [Algorithms.ElGamalCrypto]: Object.freeze({
     encrypt: ["message"],
-    decrypt: ["encrypted-1", "encrypted-2", "alpha", "p", "a"],
+    decrypt: ["encrypted", "private_key"],
+  }),
+  [Algorithms.RSASign]: Object.freeze({
+    encrypt: ["message"],
+    decrypt: ["message", "signature", "public_key"],
+  }),
+  [Algorithms.ElGamalSign]: Object.freeze({
+    encrypt: ["message"],
+    decrypt: ["message", "signature", "alpha", "beta", "p"],
+  }),
+
+  [Algorithms.EllipticCurveCrypto]: Object.freeze({
+    encrypt: ["message"],
+    decrypt: ["c_1", "c_2", "private_key"],
+  }),
+  [Algorithms.EllipticCurveSign]: Object.freeze({
+    encrypt: ["message", "private_key"],
+    decrypt: ["message", "signature", "public_key"],
   }),
 });
 const APIURLs = {
@@ -33,6 +52,22 @@ const APIURLs = {
   [Algorithms.ElGamalCrypto]: {
     encrypt: url + "/elgamal-encrypt",
     decrypt: url + "/elgamal-decrypt",
+  },
+  [Algorithms.RSASign]: {
+    encrypt: url + "/rsa-signature",
+    decrypt: url + "/rsa-verify",
+  },
+  [Algorithms.ElGamalSign]: {
+    encrypt: url + "/elgamal-signature",
+    decrypt: url + "/elgamal-verify",
+  },
+  [Algorithms.EllipticCurveCrypto]: {
+    encrypt: url + "/ecelgamal-encrypt",
+    decrypt: url + "/ecelgamal-decrypt",
+  },
+  [Algorithms.EllipticCurveSign]: {
+    encrypt: url + "/ecdsa-signature",
+    decrypt: url + "/ecdsa-verify",
   },
 };
 
@@ -65,6 +100,8 @@ algorithms.forEach((algorithm_button) => {
     removeFormInputs();
     // remove second children from there
     addParameters(AlgorithmParameters[currentAlgo].encrypt);
+    console.log(currentAlgo);
+    console.log(AlgorithmParameters[currentAlgo]);
     algorithm_selector.innerText = algorithm_button.name;
     console.log(algorithm_selector);
   };
